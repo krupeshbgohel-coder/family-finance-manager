@@ -1,2 +1,2 @@
 # family-finance-manager
-Shree Aaradhana Collection Manager Android App
+Personal Finance and Family Budget Manager Android App
