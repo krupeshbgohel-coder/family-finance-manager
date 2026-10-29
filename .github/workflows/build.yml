@@ -17,24 +17,23 @@ steps:
   - name: Checkout source
     uses: actions/checkout@v4
 
-  - name: Set up JDK
+  - name: Set up Java
     uses: actions/setup-java@v4
     with:
       distribution: temurin
       java-version: '17'
 
-  - name: Set up Android SDK
-    uses: android-actions/setup-android@v3
+  - name: Install Gradle
+    uses: gradle/actions/setup-gradle@v4
 
-  - name: Build debug APK
+  - name: Generate Gradle wrapper
     run: |
-      chmod +x gradlew 2>/dev/null || true
-      if [ -f gradlew ]; then
-        ./gradlew assembleDebug
-      else
-        echo "Gradle wrapper is missing. Add gradlew and gradle/wrapper files."
-        exit 1
-      fi
+      gradle wrapper --gradle-version 8.9
+
+  - name: Build Android APK
+    run: |
+      chmod +x gradlew
+      ./gradlew assembleDebug
 
   - name: Upload APK
     uses: actions/upload-artifact@v4
