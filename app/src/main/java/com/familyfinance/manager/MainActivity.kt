@@ -13,6 +13,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.foundation.isSystemInDarkTheme
+import android.content.Context
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -32,15 +34,43 @@ private val Canvas = Color(0xFFF5F7FB)
 private val Green = Color(0xFF16845B)
 private val Red = Color(0xFFB42318)
 
+private enum class AppThemeMode(val label: String) { SYSTEM("System default"), LIGHT("Light mode"), DARK("Dark mode") }
+
+private fun loadThemeMode(context: Context): AppThemeMode {
+    val saved = context.getSharedPreferences("family_finance_settings", Context.MODE_PRIVATE)
+        .getString("theme_mode", AppThemeMode.SYSTEM.name)
+    return runCatching { AppThemeMode.valueOf(saved ?: AppThemeMode.SYSTEM.name) }.getOrDefault(AppThemeMode.SYSTEM)
+}
+
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val dao = com.familyfinance.manager.data.FinanceDatabase.get(this).dao()
         setContent {
-            MaterialTheme(colorScheme = lightColorScheme(primary = Blue, background = Canvas, surface = Color.White, secondary = Green)) {
+            var themeMode by remember { mutableStateOf(loadThemeMode(this@MainActivity)) }
+            val systemDark = isSystemInDarkTheme()
+            val darkTheme = when (themeMode) {
+                AppThemeMode.SYSTEM -> systemDark
+                AppThemeMode.LIGHT -> false
+                AppThemeMode.DARK -> true
+            }
+            val appColors = if (darkTheme) darkColorScheme(
+                primary = Color(0xFF9DBBFF), onPrimary = Color(0xFF102A56),
+                secondary = Color(0xFF68D5A8), background = Color(0xFF101318),
+                surface = Color(0xFF1B1F27), onSurface = Color(0xFFE5E7EB),
+                onBackground = Color(0xFFE5E7EB), error = Color(0xFFFFB4AB)
+            ) else lightColorScheme(primary = Blue, background = Canvas, surface = Color.White, secondary = Green)
+            MaterialTheme(colorScheme = appColors) {
                 var showSplash by remember { mutableStateOf(true) }
                 LaunchedEffect(Unit) { delay(1800); showSplash = false }
-                if (showSplash) BrandSplash() else FinanceShell(dao)
+                if (showSplash) BrandSplash() else FinanceShell(
+                    dao = dao,
+                    themeMode = themeMode,
+                    onThemeModeChange = { mode ->
+                        themeMode = mode
+                        getSharedPreferences("family_finance_settings", MODE_PRIVATE).edit().putString("theme_mode", mode.name).apply()
+                    }
+                )
             }
         }
     }
@@ -67,7 +97,7 @@ class MainActivity : ComponentActivity() {
 private enum class Screen(val title: String) { Dashboard("Overview"), Activity("Activity"), Events("Events"), Loans("Loans"), Manage("Manage") }
 
 @OptIn(ExperimentalMaterial3Api::class)
-@Composable private fun FinanceShell(dao: com.familyfinance.manager.data.FinanceDao) {
+@Composable private fun FinanceShell(dao: com.familyfinance.manager.data.FinanceDao, themeMode: AppThemeMode, onThemeModeChange: (AppThemeMode) -> Unit) {
     val tx by dao.observeTransactions().collectAsStateWithLifecycle(emptyList())
     val events by dao.observeEvents().collectAsStateWithLifecycle(emptyList())
     val loans by dao.observeLoans().collectAsStateWithLifecycle(emptyList())
@@ -80,11 +110,11 @@ private enum class Screen(val title: String) { Dashboard("Overview"), Activity("
     var selectedType by remember { mutableStateOf("Expense") }
     var form by remember { mutableStateOf<String?>(null) }
 
-    Scaffold(containerColor = Canvas, topBar = {
-        TopAppBar(title = { Column { Text("Family Finance", fontWeight = FontWeight.Bold, color = Navy); Text("Your household, in control", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant) } },
+    Scaffold(containerColor = MaterialTheme.colorScheme.background, topBar = {
+        TopAppBar(title = { Column { Text("Family Finance", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface); Text("Your household, in control", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant) } },
             actions = { IconButton(onClick = { selectedType = "Income"; transactionDialog = true }) { Icon(Icons.Default.AddCircle, "Add income", tint = Blue) } })
     }, bottomBar = {
-        NavigationBar(containerColor = Color.White) {
+        NavigationBar(containerColor = MaterialTheme.colorScheme.surface) {
             Screen.values().forEach { s ->
                 NavigationBarItem(selected = screen == s, onClick = { screen = s },
                     icon = { Icon(when(s) { Screen.Dashboard -> Icons.Default.Dashboard; Screen.Activity -> Icons.Default.ReceiptLong; Screen.Events -> Icons.Default.Celebration; Screen.Loans -> Icons.Default.AccountBalance; Screen.Manage -> Icons.Default.Tune }, null) },
@@ -99,7 +129,7 @@ private enum class Screen(val title: String) { Dashboard("Overview"), Activity("
             Screen.Activity -> ActivityScreen(tx, p, onDelete = { scope.launch { dao.deleteTransaction(it) } })
             Screen.Events -> EventsScreen(events, p, onAdd = { title, budget, actual, note -> scope.launch { dao.addEvent(com.familyfinance.manager.data.FamilyEvent(title=title, date=System.currentTimeMillis(), budget=budget, actual=actual, note=note)) } }, onDelete = { scope.launch { dao.deleteEvent(it) } })
             Screen.Loans -> LoansScreen(loans, p, onAdd = { title, principal, rate, months -> scope.launch { dao.addLoan(com.familyfinance.manager.data.FamilyLoan(title=title, principal=principal, annualInterestPercent=rate, tenureMonths=months)) } }, onDelete = { scope.launch { dao.deleteLoan(it) } })
-            Screen.Manage -> ManageScreen(budgets, accounts, members, p, onBudget={c,a->scope.launch{dao.addBudget(com.familyfinance.manager.data.CategoryBudget(category=c,monthlyLimit=a))}}, onAccount={n,k,b->scope.launch{dao.addAccount(com.familyfinance.manager.data.FinanceAccount(name=n,kind=k,openingBalance=b))}}, onMember={n,r->scope.launch{dao.addMember(com.familyfinance.manager.data.FamilyMember(name=n,role=r))}}, onDeleteBudget={scope.launch{dao.deleteBudget(it)}}, onDeleteAccount={scope.launch{dao.deleteAccount(it)}}, onDeleteMember={scope.launch{dao.deleteMember(it)}})
+            Screen.Manage -> ManageScreen(budgets, accounts, members, p, themeMode, onThemeModeChange, onBudget={c,a->scope.launch{dao.addBudget(com.familyfinance.manager.data.CategoryBudget(category=c,monthlyLimit=a))}}, onAccount={n,k,b->scope.launch{dao.addAccount(com.familyfinance.manager.data.FinanceAccount(name=n,kind=k,openingBalance=b))}}, onMember={n,r->scope.launch{dao.addMember(com.familyfinance.manager.data.FamilyMember(name=n,role=r))}}, onDeleteBudget={scope.launch{dao.deleteBudget(it)}}, onDeleteAccount={scope.launch{dao.deleteAccount(it)}}, onDeleteMember={scope.launch{dao.deleteMember(it)}})
         }
     }
     if(transactionDialog) TransactionForm(selectedType, members.map{it.name}, onDismiss={transactionDialog=false}) { type,title,category,amount,member,account,note ->
@@ -168,13 +198,20 @@ private enum class Screen(val title: String) { Dashboard("Overview"), Activity("
     }
     if(show)FormDialog("Add loan",listOf("Loan name","Principal ₹","Annual interest %","Tenure months"),{show=false}){v->val p=v[1].toDoubleOrNull()?:0.0;val r=v[2].toDoubleOrNull()?:0.0;val m=v[3].toIntOrNull()?:0;if(v[0].isNotBlank()&&p>0&&m>0)onAdd(v[0],p,r,m);show=false}
 }
-@Composable private fun ManageScreen(budgets:List<com.familyfinance.manager.data.CategoryBudget>,accounts:List<com.familyfinance.manager.data.FinanceAccount>,members:List<com.familyfinance.manager.data.FamilyMember>,padding:PaddingValues,onBudget:(String,Double)->Unit,onAccount:(String,String,Double)->Unit,onMember:(String,String)->Unit,onDeleteBudget:(com.familyfinance.manager.data.CategoryBudget)->Unit,onDeleteAccount:(com.familyfinance.manager.data.FinanceAccount)->Unit,onDeleteMember:(com.familyfinance.manager.data.FamilyMember)->Unit) {
+@Composable private fun ManageScreen(budgets:List<com.familyfinance.manager.data.CategoryBudget>,accounts:List<com.familyfinance.manager.data.FinanceAccount>,members:List<com.familyfinance.manager.data.FamilyMember>,padding:PaddingValues,themeMode:AppThemeMode,onThemeModeChange:(AppThemeMode)->Unit,onBudget:(String,Double)->Unit,onAccount:(String,String,Double)->Unit,onMember:(String,String)->Unit,onDeleteBudget:(com.familyfinance.manager.data.CategoryBudget)->Unit,onDeleteAccount:(com.familyfinance.manager.data.FinanceAccount)->Unit,onDeleteMember:(com.familyfinance.manager.data.FamilyMember)->Unit) {
     var form by remember{mutableStateOf<String?>(null)}
     Column(Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).padding(16.dp),verticalArrangement=Arrangement.spacedBy(10.dp)){Text("Family setup",style=MaterialTheme.typography.headlineSmall,fontWeight=FontWeight.Bold);Text("Budgets, accounts and household members",color=Color.Gray);Row(horizontalArrangement=Arrangement.spacedBy(6.dp)){OutlinedButton(onClick={form="Budget"},modifier=Modifier.weight(1f)){Text("Budget")};OutlinedButton(onClick={form="Account"},modifier=Modifier.weight(1f)){Text("Account")};OutlinedButton(onClick={form="Member"},modifier=Modifier.weight(1f)){Text("Member")}}
         Text("Monthly budgets",style=MaterialTheme.typography.titleMedium,fontWeight=FontWeight.Bold);if(budgets.isEmpty())Empty("No budget categories yet.");budgets.forEach{b->ManageRow(b.category,"Monthly limit ${money(b.monthlyLimit)}"){onDeleteBudget(b)}}
         Text("Accounts",style=MaterialTheme.typography.titleMedium,fontWeight=FontWeight.Bold);if(accounts.isEmpty())Empty("Add Cash, Bank or UPI accounts.");accounts.forEach{a->ManageRow(a.name,"${a.kind} • Opening ${money(a.openingBalance)}"){onDeleteAccount(a)}}
         Text("Family members",style=MaterialTheme.typography.titleMedium,fontWeight=FontWeight.Bold);if(members.isEmpty())Empty("Add names for transaction assignment.");members.forEach{m->ManageRow(m.name,m.role){onDeleteMember(m)}}
-        Text("Data & security",style=MaterialTheme.typography.titleMedium,fontWeight=FontWeight.Bold);Text("This build stores data locally on this device. Login, encrypted cloud sync and remote backup are not enabled. Do not rely on it as your only financial record.",color=Color.Gray)
+        Text("Appearance",style=MaterialTheme.typography.titleMedium,fontWeight=FontWeight.Bold)
+        Text("Choose how the app looks. System default follows your phone's light/dark setting.", color=MaterialTheme.colorScheme.onSurfaceVariant)
+        Row(horizontalArrangement=Arrangement.spacedBy(6.dp), modifier=Modifier.fillMaxWidth()) {
+            AppThemeMode.values().forEach { mode ->
+                FilterChip(selected = themeMode == mode, onClick = { onThemeModeChange(mode) }, label = { Text(when(mode) { AppThemeMode.SYSTEM -> "System"; AppThemeMode.LIGHT -> "Light"; AppThemeMode.DARK -> "Dark" }) }, modifier = Modifier.weight(1f))
+            }
+        }
+        Text("Data & security",style=MaterialTheme.typography.titleMedium,fontWeight=FontWeight.Bold);Text("This build stores data locally on this device. Login, encrypted cloud sync and remote backup are not enabled. Do not rely on it as your only financial record.",color=MaterialTheme.colorScheme.onSurfaceVariant)
     }
     when(form){"Budget"->FormDialog("Add budget",listOf("Category","Monthly limit ₹"),{form=null}){v->if(v[0].isNotBlank())onBudget(v[0],v[1].toDoubleOrNull()?:0.0);form=null};"Account"->FormDialog("Add account",listOf("Account name","Type: Cash/Bank/UPI","Opening balance ₹"),{form=null}){v->if(v[0].isNotBlank())onAccount(v[0],v[1].ifBlank{"Cash"},v[2].toDoubleOrNull()?:0.0);form=null};"Member"->FormDialog("Add family member",listOf("Name","Role"),{form=null}){v->if(v[0].isNotBlank())onMember(v[0],v[1].ifBlank{"Family member"});form=null}}
 }
