@@ -1,0 +1,18 @@
+<resources>
+    <string name="app_name">फैमिली फाइनेंस मैनेजर</string>
+    <string name="welcome_title">फैमिली फाइनेंस</string>
+    <string name="welcome_subtitle">अपने परिवार के पैसों पर नियंत्रण रखें</string>
+    <string name="sign_in">साइन इन करें</string>
+    <string name="email">ईमेल</string>
+    <string name="password">पासवर्ड</string>
+    <string name="forgot_password">पासवर्ड भूल गए?</string>
+    <string name="create_account">खाता बनाएं</string>
+    <string name="phone_number">मोबाइल नंबर</string>
+    <string name="send_otp">OTP भेजें</string>
+    <string name="verify_otp">OTP सत्यापित करें</string>
+    <string name="language">भाषा</string>
+    <string name="language_english">अंग्रेज़ी</string>
+    <string name="language_hindi">हिन्दी</string>
+    <string name="language_gujarati">गुजराती</string>
+    <string name="sync_status_local">केवल इस डिवाइस पर — क्लाउड कॉन्फ़िगर नहीं है</string>
+</resources>
