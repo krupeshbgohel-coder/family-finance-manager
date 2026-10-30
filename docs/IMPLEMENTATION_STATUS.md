@@ -16,3 +16,6 @@
 - Automated UI/instrumentation tests and a successful real Android build on a configured SDK runner.
 
 Do not describe this package as production-ready until these items are implemented and tested.
+
+## Theme modes
+System default, Light mode, and Dark mode are available from Manage → Appearance. The selection is stored locally using Android SharedPreferences.
