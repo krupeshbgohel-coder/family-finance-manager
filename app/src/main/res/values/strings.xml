@@ -1,0 +1,18 @@
+<resources>
+    <string name="app_name">Family Finance Manager</string>
+    <string name="welcome_title">Family Finance</string>
+    <string name="welcome_subtitle">Your household, in control</string>
+    <string name="sign_in">Sign in</string>
+    <string name="email">Email</string>
+    <string name="password">Password</string>
+    <string name="forgot_password">Forgot password?</string>
+    <string name="create_account">Create account</string>
+    <string name="phone_number">Mobile number</string>
+    <string name="send_otp">Send OTP</string>
+    <string name="verify_otp">Verify OTP</string>
+    <string name="language">Language</string>
+    <string name="language_english">English</string>
+    <string name="language_hindi">Hindi</string>
+    <string name="language_gujarati">Gujarati</string>
+    <string name="sync_status_local">Local device only — cloud is not configured</string>
+</resources>
