@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "647769674174",
+    "project_id": "family-finance-manager-a14aa",
+    "storage_bucket": "family-finance-manager-a14aa.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:647769674174:android:39ed61ebea087f4ef069ef",
+        "android_client_info": {
+          "package_name": "com.familyfinance.manager"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDdmD0mhOMcgVZUQoj_E0AlCO5GgAdfIvc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
