@@ -2,15 +2,11 @@ package com.familyfinance.manager.data
 
 /**
 
-* Provides a consistent way to find or create a cloud identity
-
-* for a local Room record.
+* Finds or creates the stable cloud identity for a local Room record.
 
 * 
 
-* This helper prepares record identity only.
-
-* It does not upload or download data.
+* This helper manages identity only. It does not upload or download data.
   */
   class SyncIdentityHelper(
   private val dao: FinanceDao
@@ -19,23 +15,28 @@ package com.familyfinance.manager.data
   suspend fun getOrCreate(
   collection: String,
   localId: Long,
-  familyId: String,
-  updatedBy: String = ""
+  familyId: String
   ): SyncIdentity {
   require(collection in ALLOWED_COLLECTIONS) {
   "Unsupported collection: $collection"
   }
-  require(localId > 0) {
-  "Local record ID must be greater than zero."
-  }
-  require(familyId.isNotBlank()) {
-  "Family ID cannot be blank."
-  }
   
-   val existing = dao.findSyncIdentity(collection, localId)
+   require(localId > 0) {
+     "Local record ID must be greater than zero."
+ }
+
+ require(familyId.isNotBlank()) {
+     "Family ID cannot be blank."
+ }
+
+ val existing = dao.findSyncIdentity(collection, localId)
 
  if (existing != null) {
-     if (existing.familyId != familyId) {
+     require(existing.familyId.isBlank() || existing.familyId == familyId) {
+         "This record is already associated with another family."
+     }
+
+     if (existing.familyId.isBlank()) {
          val updated = existing.copy(
              familyId = familyId,
              updatedAt = System.currentTimeMillis(),
@@ -62,11 +63,17 @@ package com.familyfinance.manager.data
      return identity.copy(id = insertedId)
  }
 
- // Another operation may have inserted the same identity.
- return dao.findSyncIdentity(collection, localId)
+ // A concurrent operation may have inserted this identity.
+ val inserted = dao.findSyncIdentity(collection, localId)
      ?: throw IllegalStateException(
          "Could not create or retrieve sync identity."
      )
+
+ require(inserted.familyId.isBlank() || inserted.familyId == familyId) {
+     "This record is already associated with another family."
+ }
+
+ return inserted
   
   }
   
