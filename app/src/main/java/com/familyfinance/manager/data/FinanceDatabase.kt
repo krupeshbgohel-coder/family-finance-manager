@@ -6,365 +6,447 @@ import androidx.room.migration.Migration
 import kotlinx.coroutines.flow.Flow
 
 @Entity(
-    tableName = "transactions",
-    indices = [
-        Index("date"),
-        Index("category"),
-        Index("type")
-    ]
+tableName = "transactions",
+indices = [
+Index("date"),
+Index("category"),
+Index("type")
+]
 )
 data class FinanceTransaction(
-    @PrimaryKey(autoGenerate = true)
-    val id: Long = 0,
-    val type: String,
-    val title: String,
-    val category: String,
-    val amount: Double,
-    val member: String,
-    val account: String,
-    val date: Long = System.currentTimeMillis(),
-    val note: String = "",
-    val eventId: Long? = null,
-    val subcategory: String = ""
+@PrimaryKey(autoGenerate = true)
+val id: Long = 0,
+val type: String,
+val title: String,
+val category: String,
+val amount: Double,
+val member: String,
+val account: String,
+val date: Long = System.currentTimeMillis(),
+val note: String = "",
+val eventId: Long? = null,
+val subcategory: String = ""
 )
 
 @Entity(tableName = "family_events")
 data class FamilyEvent(
-    @PrimaryKey(autoGenerate = true)
-    val id: Long = 0,
-    val title: String,
-    val date: Long,
-    val budget: Double,
-    val actual: Double,
-    val note: String = "",
-    val isActive: Boolean = true
+@PrimaryKey(autoGenerate = true)
+val id: Long = 0,
+val title: String,
+val date: Long,
+val budget: Double,
+val actual: Double,
+val note: String = "",
+val isActive: Boolean = true
 )
 
 @Entity(tableName = "loans")
 data class FamilyLoan(
-    @PrimaryKey(autoGenerate = true)
-    val id: Long = 0,
-    val title: String,
-    val principal: Double,
-    val annualInterestPercent: Double,
-    val tenureMonths: Int,
-    val startDate: Long = System.currentTimeMillis(),
-    val emiPaidCount: Int = 0,
-    val note: String = "",
-    val interestType: String = "REDUCING",
-    val direction: String = "BORROWED",
-    val amountRepaid: Double = 0.0,
-    val emiDueDay: Int = 5,
-    val lastPaidYearMonth: String = ""
+@PrimaryKey(autoGenerate = true)
+val id: Long = 0,
+val title: String,
+val principal: Double,
+val annualInterestPercent: Double,
+val tenureMonths: Int,
+val startDate: Long = System.currentTimeMillis(),
+val emiPaidCount: Int = 0,
+val note: String = "",
+val interestType: String = "REDUCING",
+val direction: String = "BORROWED",
+val amountRepaid: Double = 0.0,
+val emiDueDay: Int = 5,
+val lastPaidYearMonth: String = ""
 )
 
 @Entity(tableName = "budgets")
 data class CategoryBudget(
-    @PrimaryKey(autoGenerate = true)
-    val id: Long = 0,
-    val category: String,
-    val monthlyLimit: Double
+@PrimaryKey(autoGenerate = true)
+val id: Long = 0,
+val category: String,
+val monthlyLimit: Double
 )
 
 @Entity(tableName = "accounts")
 data class FinanceAccount(
-    @PrimaryKey(autoGenerate = true)
-    val id: Long = 0,
-    val name: String,
-    val kind: String,
-    val openingBalance: Double = 0.0,
-    val isActive: Boolean = true
+@PrimaryKey(autoGenerate = true)
+val id: Long = 0,
+val name: String,
+val kind: String,
+val openingBalance: Double = 0.0,
+val isActive: Boolean = true
 )
 
 @Entity(tableName = "family_members")
 data class FamilyMember(
-    @PrimaryKey(autoGenerate = true)
-    val id: Long = 0,
-    val name: String,
-    val role: String = "Family member"
+@PrimaryKey(autoGenerate = true)
+val id: Long = 0,
+val name: String,
+val role: String = "Family member"
 )
 
 @Entity(
-    tableName = "categories",
-    indices = [
-        Index(
-            value = ["name", "type"],
-            unique = true
-        )
-    ]
+tableName = "categories",
+indices = [
+Index(
+value = ["name", "type"],
+unique = true
+)
+]
 )
 data class FinanceCategory(
-    @PrimaryKey(autoGenerate = true)
-    val id: Long = 0,
-    val name: String,
-    val type: String,
-    val isActive: Boolean = true,
-    val parentCategory: String = ""
+@PrimaryKey(autoGenerate = true)
+val id: Long = 0,
+val name: String,
+val type: String,
+val isActive: Boolean = true,
+val parentCategory: String = ""
 )
 
 @Dao
 interface FinanceDao {
 
-    // TRANSACTIONS
+// TRANSACTIONS
 
-    @Query("SELECT * FROM transactions ORDER BY date DESC")
-    fun observeTransactions(): Flow<List<FinanceTransaction>>
+@Query("SELECT * FROM transactions ORDER BY date DESC")
+fun observeTransactions(): Flow<List<FinanceTransaction>>
 
-    @Query("SELECT * FROM transactions ORDER BY date DESC")
-    suspend fun getAllTransactions(): List<FinanceTransaction>
+@Query("SELECT * FROM transactions ORDER BY date DESC")
+suspend fun getAllTransactions(): List<FinanceTransaction>
 
-    @Insert
-    suspend fun addTransaction(item: FinanceTransaction)
+@Insert
+suspend fun addTransaction(item: FinanceTransaction)
 
-    @Update
-    suspend fun updateTransaction(item: FinanceTransaction)
+@Update
+suspend fun updateTransaction(item: FinanceTransaction)
 
-    @Delete
-    suspend fun deleteTransaction(item: FinanceTransaction)
-
-
-    // FAMILY EVENTS
-
-    @Query("SELECT * FROM family_events ORDER BY date DESC")
-    fun observeEvents(): Flow<List<FamilyEvent>>
-
-    @Query("SELECT * FROM family_events ORDER BY date DESC")
-    suspend fun getAllEvents(): List<FamilyEvent>
-
-    @Insert
-    suspend fun addEvent(item: FamilyEvent)
-
-    @Update
-    suspend fun updateEvent(item: FamilyEvent)
-
-    @Delete
-    suspend fun deleteEvent(item: FamilyEvent)
+@Delete
+suspend fun deleteTransaction(item: FinanceTransaction)
 
 
-    // LOANS
+// FAMILY EVENTS
 
-    @Query("SELECT * FROM loans ORDER BY startDate DESC")
-    fun observeLoans(): Flow<List<FamilyLoan>>
+@Query("SELECT * FROM family_events ORDER BY date DESC")
+fun observeEvents(): Flow<List<FamilyEvent>>
 
-    @Query("SELECT * FROM loans ORDER BY startDate DESC")
-    suspend fun getAllLoans(): List<FamilyLoan>
+@Query("SELECT * FROM family_events ORDER BY date DESC")
+suspend fun getAllEvents(): List<FamilyEvent>
 
-    @Insert
-    suspend fun addLoan(item: FamilyLoan)
+@Insert
+suspend fun addEvent(item: FamilyEvent)
 
-    @Update
-    suspend fun updateLoan(item: FamilyLoan)
+@Update
+suspend fun updateEvent(item: FamilyEvent)
 
-    @Delete
-    suspend fun deleteLoan(item: FamilyLoan)
-
-
-    // BUDGETS
-
-    @Query("SELECT * FROM budgets ORDER BY category")
-    fun observeBudgets(): Flow<List<CategoryBudget>>
-
-    @Query("SELECT * FROM budgets ORDER BY category")
-    suspend fun getAllBudgets(): List<CategoryBudget>
-
-    @Insert
-    suspend fun addBudget(item: CategoryBudget)
-
-    @Delete
-    suspend fun deleteBudget(item: CategoryBudget)
+@Delete
+suspend fun deleteEvent(item: FamilyEvent)
 
 
-    // ACCOUNTS
+// LOANS
 
-    @Query("SELECT * FROM accounts ORDER BY name")
-    fun observeAccounts(): Flow<List<FinanceAccount>>
+@Query("SELECT * FROM loans ORDER BY startDate DESC")
+fun observeLoans(): Flow<List<FamilyLoan>>
 
-    @Query("SELECT * FROM accounts ORDER BY name")
-    suspend fun getAllAccounts(): List<FinanceAccount>
+@Query("SELECT * FROM loans ORDER BY startDate DESC")
+suspend fun getAllLoans(): List<FamilyLoan>
 
-    @Insert
-    suspend fun addAccount(item: FinanceAccount)
+@Insert
+suspend fun addLoan(item: FamilyLoan)
 
-    @Update
-    suspend fun updateAccount(item: FinanceAccount)
+@Update
+suspend fun updateLoan(item: FamilyLoan)
 
-    @Delete
-    suspend fun deleteAccount(item: FinanceAccount)
-
-
-    // FAMILY MEMBERS
-
-    @Query("SELECT * FROM family_members ORDER BY name")
-    fun observeMembers(): Flow<List<FamilyMember>>
-
-    @Query("SELECT * FROM family_members ORDER BY name")
-    suspend fun getAllMembers(): List<FamilyMember>
-
-    @Insert
-    suspend fun addMember(item: FamilyMember)
-
-    @Delete
-    suspend fun deleteMember(item: FamilyMember)
+@Delete
+suspend fun deleteLoan(item: FamilyLoan)
 
 
-    // CATEGORIES
+// BUDGETS
 
-    @Query("SELECT * FROM categories WHERE type = :type ORDER BY name")
-    fun observeCategories(type: String): Flow<List<FinanceCategory>>
+@Query("SELECT * FROM budgets ORDER BY category")
+fun observeBudgets(): Flow<List<CategoryBudget>>
 
-    @Query("SELECT * FROM categories ORDER BY type, name")
-    fun observeAllCategories(): Flow<List<FinanceCategory>>
+@Query("SELECT * FROM budgets ORDER BY category")
+suspend fun getAllBudgets(): List<CategoryBudget>
 
-    @Query("SELECT * FROM categories ORDER BY type, name")
-    suspend fun getAllCategories(): List<FinanceCategory>
+@Insert
+suspend fun addBudget(item: CategoryBudget)
 
-    @Insert(onConflict = OnConflictStrategy.IGNORE)
-    suspend fun addCategory(item: FinanceCategory)
+@Delete
+suspend fun deleteBudget(item: CategoryBudget)
 
-    @Update
-    suspend fun updateCategory(item: FinanceCategory)
 
-    @Delete
-    suspend fun deleteCategory(item: FinanceCategory)
+// ACCOUNTS
+
+@Query("SELECT * FROM accounts ORDER BY name")
+fun observeAccounts(): Flow<List<FinanceAccount>>
+
+@Query("SELECT * FROM accounts ORDER BY name")
+suspend fun getAllAccounts(): List<FinanceAccount>
+
+@Insert
+suspend fun addAccount(item: FinanceAccount)
+
+@Update
+suspend fun updateAccount(item: FinanceAccount)
+
+@Delete
+suspend fun deleteAccount(item: FinanceAccount)
+
+
+// FAMILY MEMBERS
+
+@Query("SELECT * FROM family_members ORDER BY name")
+fun observeMembers(): Flow<List<FamilyMember>>
+
+@Query("SELECT * FROM family_members ORDER BY name")
+suspend fun getAllMembers(): List<FamilyMember>
+
+@Insert
+suspend fun addMember(item: FamilyMember)
+
+@Delete
+suspend fun deleteMember(item: FamilyMember)
+
+
+// CATEGORIES
+
+@Query("SELECT * FROM categories WHERE type = :type ORDER BY name")
+fun observeCategories(type: String): Flow<List<FinanceCategory>>
+
+@Query("SELECT * FROM categories ORDER BY type, name")
+fun observeAllCategories(): Flow<List<FinanceCategory>>
+
+@Query("SELECT * FROM categories ORDER BY type, name")
+suspend fun getAllCategories(): List<FinanceCategory>
+
+@Insert(onConflict = OnConflictStrategy.IGNORE)
+suspend fun addCategory(item: FinanceCategory)
+
+@Update
+suspend fun updateCategory(item: FinanceCategory)
+
+@Delete
+suspend fun deleteCategory(item: FinanceCategory)
+
+
+// SYNC IDENTITIES
+
+@Query(
+    """
+    SELECT * FROM sync_identities
+    WHERE collection = :collection AND localId = :localId
+    LIMIT 1
+    """
+)
+suspend fun findSyncIdentity(
+    collection: String,
+    localId: Long
+): SyncIdentity?
+
+@Query("SELECT * FROM sync_identities ORDER BY id")
+suspend fun getAllSyncIdentities(): List<SyncIdentity>
+
+@Insert(onConflict = OnConflictStrategy.IGNORE)
+suspend fun insertSyncIdentity(item: SyncIdentity): Long
+
+@Update
+suspend fun updateSyncIdentity(item: SyncIdentity)
+
+@Query(
+    """
+    UPDATE sync_identities
+    SET isDeleted = 1, updatedAt = :updatedAt
+    WHERE collection = :collection AND localId = :localId
+    """
+)
+suspend fun markSyncIdentityDeleted(
+    collection: String,
+    localId: Long,
+    updatedAt: Long = System.currentTimeMillis()
+)
+
+@Query(
+    """
+    DELETE FROM sync_identities
+    WHERE collection = :collection AND localId = :localId
+    """
+)
+suspend fun removeSyncIdentity(
+    collection: String,
+    localId: Long
+)
+
 }
 
-
 @Database(
-    entities = [
-        FinanceTransaction::class,
-        FamilyEvent::class,
-        FamilyLoan::class,
-        CategoryBudget::class,
-        FinanceAccount::class,
-        FamilyMember::class,
-        FinanceCategory::class
-    ],
-    version = 6,
-    exportSchema = false
+entities = [
+FinanceTransaction::class,
+FamilyEvent::class,
+FamilyLoan::class,
+CategoryBudget::class,
+FinanceAccount::class,
+FamilyMember::class,
+FinanceCategory::class,
+SyncIdentity::class
+],
+version = 7,
+exportSchema = false
 )
 abstract class FinanceDatabase : RoomDatabase() {
 
-    abstract fun dao(): FinanceDao
+abstract fun dao(): FinanceDao
 
-    companion object {
+companion object {
 
-        @Volatile
-        private var INSTANCE: FinanceDatabase? = null
+    @Volatile
+    private var INSTANCE: FinanceDatabase? = null
 
-        private val MIGRATION_1_2 = object : Migration(1, 2) {
+    private val MIGRATION_1_2 = object : Migration(1, 2) {
+        override fun migrate(
+            db: androidx.sqlite.db.SupportSQLiteDatabase
+        ) {
+            db.execSQL(
+                "ALTER TABLE family_events ADD COLUMN isActive INTEGER NOT NULL DEFAULT 1"
+            )
 
-            override fun migrate(
-                db: androidx.sqlite.db.SupportSQLiteDatabase
-            ) {
-                db.execSQL(
-                    "ALTER TABLE family_events ADD COLUMN isActive INTEGER NOT NULL DEFAULT 1"
+            db.execSQL(
+                "ALTER TABLE loans ADD COLUMN interestType TEXT NOT NULL DEFAULT 'REDUCING'"
+            )
+
+            db.execSQL(
+                "ALTER TABLE loans ADD COLUMN direction TEXT NOT NULL DEFAULT 'BORROWED'"
+            )
+
+            db.execSQL(
+                "ALTER TABLE loans ADD COLUMN amountRepaid REAL NOT NULL DEFAULT 0"
+            )
+
+            db.execSQL(
+                """
+                CREATE TABLE IF NOT EXISTS categories (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                    name TEXT NOT NULL,
+                    type TEXT NOT NULL,
+                    isActive INTEGER NOT NULL DEFAULT 1
                 )
+                """.trimIndent()
+            )
 
-                db.execSQL(
-                    "ALTER TABLE loans ADD COLUMN interestType TEXT NOT NULL DEFAULT 'REDUCING'"
-                )
+            db.execSQL(
+                "CREATE UNIQUE INDEX IF NOT EXISTS index_categories_name_type ON categories(name, type)"
+            )
 
-                db.execSQL(
-                    "ALTER TABLE loans ADD COLUMN direction TEXT NOT NULL DEFAULT 'BORROWED'"
-                )
+            db.execSQL(
+                "CREATE INDEX IF NOT EXISTS index_transactions_date ON transactions(date)"
+            )
 
-                db.execSQL(
-                    "ALTER TABLE loans ADD COLUMN amountRepaid REAL NOT NULL DEFAULT 0"
-                )
+            db.execSQL(
+                "CREATE INDEX IF NOT EXISTS index_transactions_category ON transactions(category)"
+            )
 
-                db.execSQL(
-                    """
-                    CREATE TABLE IF NOT EXISTS categories (
-                        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-                        name TEXT NOT NULL,
-                        type TEXT NOT NULL,
-                        isActive INTEGER NOT NULL DEFAULT 1
-                    )
-                    """.trimIndent()
-                )
-
-                db.execSQL(
-                    "CREATE UNIQUE INDEX IF NOT EXISTS index_categories_name_type ON categories(name, type)"
-                )
-
-                db.execSQL(
-                    "CREATE INDEX IF NOT EXISTS index_transactions_date ON transactions(date)"
-                )
-
-                db.execSQL(
-                    "CREATE INDEX IF NOT EXISTS index_transactions_category ON transactions(category)"
-                )
-
-                db.execSQL(
-                    "CREATE INDEX IF NOT EXISTS index_transactions_type ON transactions(type)"
-                )
-            }
+            db.execSQL(
+                "CREATE INDEX IF NOT EXISTS index_transactions_type ON transactions(type)"
+            )
         }
-
-        private val MIGRATION_2_3 = object : Migration(2, 3) {
-
-            override fun migrate(
-                db: androidx.sqlite.db.SupportSQLiteDatabase
-            ) {
-                db.execSQL(
-                    "ALTER TABLE transactions ADD COLUMN subcategory TEXT NOT NULL DEFAULT ''"
-                )
-
-                db.execSQL(
-                    "ALTER TABLE accounts ADD COLUMN isActive INTEGER NOT NULL DEFAULT 1"
-                )
-            }
-        }
-
-        private val MIGRATION_3_4 = object : Migration(3, 4) {
-
-            override fun migrate(
-                db: androidx.sqlite.db.SupportSQLiteDatabase
-            ) {
-                db.execSQL(
-                    "ALTER TABLE loans ADD COLUMN emiDueDay INTEGER NOT NULL DEFAULT 5"
-                )
-            }
-        }
-
-        private val MIGRATION_4_5 = object : Migration(4, 5) {
-
-            override fun migrate(
-                db: androidx.sqlite.db.SupportSQLiteDatabase
-            ) {
-                db.execSQL(
-                    "ALTER TABLE loans ADD COLUMN lastPaidYearMonth TEXT NOT NULL DEFAULT ''"
-                )
-            }
-        }
-
-        private val MIGRATION_5_6 = object : Migration(5, 6) {
-
-            override fun migrate(
-                db: androidx.sqlite.db.SupportSQLiteDatabase
-            ) {
-                db.execSQL(
-                    "ALTER TABLE categories ADD COLUMN parentCategory TEXT NOT NULL DEFAULT ''"
-                )
-            }
-        }
-
-        fun get(context: Context): FinanceDatabase =
-            INSTANCE ?: synchronized(this) {
-                INSTANCE ?: Room.databaseBuilder(
-                    context.applicationContext,
-                    FinanceDatabase::class.java,
-                    "family_finance.db"
-                )
-                    .addMigrations(
-                        MIGRATION_1_2,
-                        MIGRATION_2_3,
-                        MIGRATION_3_4,
-                        MIGRATION_4_5,
-                        MIGRATION_5_6
-                    )
-                    .build()
-                    .also { INSTANCE = it }
-            }
     }
+
+    private val MIGRATION_2_3 = object : Migration(2, 3) {
+        override fun migrate(
+            db: androidx.sqlite.db.SupportSQLiteDatabase
+        ) {
+            db.execSQL(
+                "ALTER TABLE transactions ADD COLUMN subcategory TEXT NOT NULL DEFAULT ''"
+            )
+
+            db.execSQL(
+                "ALTER TABLE accounts ADD COLUMN isActive INTEGER NOT NULL DEFAULT 1"
+            )
+        }
+    }
+
+    private val MIGRATION_3_4 = object : Migration(3, 4) {
+        override fun migrate(
+            db: androidx.sqlite.db.SupportSQLiteDatabase
+        ) {
+            db.execSQL(
+                "ALTER TABLE loans ADD COLUMN emiDueDay INTEGER NOT NULL DEFAULT 5"
+            )
+        }
+    }
+
+    private val MIGRATION_4_5 = object : Migration(4, 5) {
+        override fun migrate(
+            db: androidx.sqlite.db.SupportSQLiteDatabase
+        ) {
+            db.execSQL(
+                "ALTER TABLE loans ADD COLUMN lastPaidYearMonth TEXT NOT NULL DEFAULT ''"
+            )
+        }
+    }
+
+    private val MIGRATION_5_6 = object : Migration(5, 6) {
+        override fun migrate(
+            db: androidx.sqlite.db.SupportSQLiteDatabase
+        ) {
+            db.execSQL(
+                "ALTER TABLE categories ADD COLUMN parentCategory TEXT NOT NULL DEFAULT ''"
+            )
+        }
+    }
+
+    private val MIGRATION_6_7 = object : Migration(6, 7) {
+        override fun migrate(
+            db: androidx.sqlite.db.SupportSQLiteDatabase
+        ) {
+            db.execSQL(
+                """
+                CREATE TABLE IF NOT EXISTS sync_identities (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                    collection TEXT NOT NULL,
+                    localId INTEGER NOT NULL,
+                    syncId TEXT NOT NULL,
+                    familyId TEXT NOT NULL,
+                    updatedAt INTEGER NOT NULL,
+                    isDeleted INTEGER NOT NULL
+                )
+                """.trimIndent()
+            )
+
+            db.execSQL(
+                """
+                CREATE UNIQUE INDEX IF NOT EXISTS
+                index_sync_identities_collection_localId
+                ON sync_identities(collection, localId)
+                """.trimIndent()
+            )
+
+            db.execSQL(
+                """
+                CREATE UNIQUE INDEX IF NOT EXISTS
+                index_sync_identities_syncId
+                ON sync_identities(syncId)
+                """.trimIndent()
+            )
+        }
+    }
+
+    fun get(context: Context): FinanceDatabase =
+        INSTANCE ?: synchronized(this) {
+            INSTANCE ?: Room.databaseBuilder(
+                context.applicationContext,
+                FinanceDatabase::class.java,
+                "family_finance.db"
+            )
+                .addMigrations(
+                    MIGRATION_1_2,
+                    MIGRATION_2_3,
+                    MIGRATION_3_4,
+                    MIGRATION_4_5,
+                    MIGRATION_5_6,
+                    MIGRATION_6_7
+                )
+                .build()
+                .also { INSTANCE = it }
+        }
+}
+
 }
